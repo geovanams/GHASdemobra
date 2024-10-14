@@ -10,7 +10,23 @@ namespace UnsecureApp.Controllers
 
         public string ReadFile(string userInput)
         {
-            using (FileStream fs = File.Open(userInput, FileMode.Open))
+            // Validate user input
+            if (userInput.Contains("..") || userInput.Contains("/") || userInput.Contains("\\"))
+            {
+                throw new ArgumentException("Invalid file path");
+            }
+
+            // Restrict file access to a specific directory
+            string baseDirectory = "/safe/directory";
+            string filePath = Path.Combine(baseDirectory, userInput);
+            filePath = Path.GetFullPath(filePath);
+
+            if (!filePath.StartsWith(baseDirectory))
+            {
+                throw new UnauthorizedAccessException("Access to the path is denied");
+            }
+
+            using (FileStream fs = File.Open(filePath, FileMode.Open))
             {
                 byte[] b = new byte[1024];
                 UTF8Encoding temp = new UTF8Encoding(true);
